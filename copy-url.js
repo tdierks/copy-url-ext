@@ -114,7 +114,6 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     clipProxy.html = container.innerHTML;
     
     var success = false;
-    bkPage.getSelection().selectAllChildren(container);
     try {
       // https://developers.google.com/web/updates/2015/04/cut-and-copy-commands?hl=en
       success = bkPage.document.execCommand("copy");
