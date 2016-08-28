@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Copy URL Extension Options</title>
+  <style>
+    body { padding: 5px; }
+    div { padding: 4px; }
+    #status { padding-left: 10px; }
+  </style>
+</head>
+
+<body>
+  <div>
+    Anchor text style:
+    <select id="anchorFmt">
+     <option value="title">Title only</option>
+     <option value="title_url">Title with URL</option>
+    </select>
+  </div>
+  
+  <div>
+    Text-only clipboard content:
+    <select id="textFmt">
+      <option value="url">URL only</option>
+      <option value="markdown">Markdown URL</option>
+    </select>
+  </div>
+
+  <div>
+    <button id="save">Save</button>
+    <span id="status"></span>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

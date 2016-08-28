@@ -1,17 +1,51 @@
+var options = undefined;
+var loadOptions = function loadOptions(opts) {
+  if (!options) {
+    options = {};
+  }
+  options = Object.assign(options, opts);
+  console.log("Options updated with ", opts, " now ", options);
+};
+
+// TODO: investigate if we can have a race condition where we get a click before
+// options load from storage; we would need promises or something to deal with this.
+var DEBUG_start = Date.now();
+console.log("before: " + (Date.now()-DEBUG_start));
+// defaults
+chrome.storage.sync.get({
+    'anchorFmt': 'title_url',
+    'textFmt': 'url'
+}, function syncComplete(retrieved) {
+  console.log("retrieved: " + (Date.now()-DEBUG_start));
+  loadOptions(retrieved);
+});
+console.log("after: " + (Date.now()-DEBUG_start));
+
+chrome.storage.onChanged.addListener(function storageChanged(changes, area) {
+  newOpts = {};
+  for (k in changes) {
+    if (changes[k].newValue != changes[k].oldValue) {
+      newOpts[k] = changes[k].newValue;
+    }
+  }
+  loadOptions(newOpts);
+});
+
+// used to pass values from the click handler to the copy event handler
 var clipProxy = {
-  'url': "",
+  'text': "",
   'html': ""
 };
 
-document.addEventListener('copy', function(e){
-    e.clipboardData.setData('text/plain', clipProxy.url);
+document.addEventListener('copy', function docCopy(e){
+    e.clipboardData.setData('text/plain', clipProxy.text);
     e.clipboardData.setData('text/html', clipProxy.html);
     e.preventDefault(); // We want our data, not data from any selection, to be written to the clipboard
 });
 
 var bkPage = chrome.extension.getBackgroundPage();
 
-var getIconImage = function(config, alpha) {
+var getIconImage = function getIconImage(config, alpha) {
   var size = config['size'];
   var context = config['canvas'].getContext('2d');
   context.clearRect(0, 0, size, size);
@@ -27,11 +61,11 @@ var getIconImage = function(config, alpha) {
   return context.getImageData(0, 0, size, size);
 };
 
-var getElemForSize = function(name, size) {
+var getElemForSize = function getElemForSize(name, size) {
   return bkPage.document.getElementById(name + size);
 };
 
-var buildConfig = function(size) {
+var buildConfig = function buildConfig(size) {
   var config = {};
   config['size'] = size;
   config['canvas'] = getElemForSize('canvas', size);
@@ -45,7 +79,7 @@ var iconSizeConfigs = {
   38: buildConfig(38)
 };
 
-var updateIcon = function(alpha) {
+var updateIcon = function updateIcon(alpha) {
   chrome.browserAction.setIcon({
     imageData: {
       '19': getIconImage(iconSizeConfigs['19'], alpha),
@@ -54,7 +88,7 @@ var updateIcon = function(alpha) {
   });
 };
 
-var animateCheck = function() {
+var animateCheck = function animateCheck() {
   var startMs = Date.now();
   var FADE_IN = 100;
   var HOLD = 500;
@@ -83,7 +117,8 @@ var animateCheck = function() {
   bkPage.setTimeout(draw, FREQ_MS);
 }
 
-chrome.browserAction.onClicked.addListener(function(tab) {
+chrome.browserAction.onClicked.addListener(function iconClickListener(tab) {
+  console.log("clicked: " + (Date.now()-DEBUG_start));
   chrome.tabs.query({'active': true, 'currentWindow': true}, function(tabs) {
     if (tabs.length < 1) {
       console.log("Got no tabs");
@@ -95,6 +130,12 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 
     var anchor = bkPage.document.getElementById("anchor");
     var container = bkPage.document.getElementById("copyContainer");
+    
+    // crap, options haven't loaded yet; need promises here?
+    if (options == undefined) {
+      console.log("Options not yet available, bailing");
+      return;
+    }
     
     var url = tabs[0].url;
     if (url == undefined) {
@@ -108,9 +149,23 @@ chrome.browserAction.onClicked.addListener(function(tab) {
       console.log("Didn't get an url from active tab");
       return;
     }
-    anchor.textContent = title + " (" + url + ")";
+    if (options['anchorFmt'] == 'title') {
+      anchor.textContent = title;
+    } else if (options['anchorFmt'] = 'title_url') {
+      anchor.textContent = title + " (" + url + ")";
+    } else {
+      console.log("Unknown option for anchorFmt: ", options['anchorFmt']);
+      return;
+    }
     
-    clipProxy.url = url;
+    if (options['textFmt'] == 'url') {
+      clipProxy.text = url;
+    } else if (options['textFmt'] == 'markdown') {
+      clipProxy.text = "[" + title + "](" + url + ")";
+    } else {
+      console.log("Unknown option for textFmt: ", options['textFmt']);
+      return;
+    }
     clipProxy.html = container.innerHTML;
     
     var success = false;
@@ -131,7 +186,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
   });
 });
 
-chrome.runtime.onSuspend.addListener(function() {
+chrome.runtime.onSuspend.addListener(function suspendListener() {
   // in case we get suspended while animating, clear icon check
   updateIcon(0);
 });
