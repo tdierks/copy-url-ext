@@ -1,0 +1,33 @@
+{
+  "manifest_version": 2,
+  
+  "name": "Copy link",
+  "description": "Copies a formatted link to the current tab onto the clipboard.",
+  "author": "Tim Dierks <tim@dierks.org>",
+  "version": "1.0",
+  
+  "browser_action": {
+    "default_icon": {
+      "19": "icon19.png",
+      "38": "icon38.png"
+    },
+    "default_title": "Copy formatted link"
+  },
+  
+  "background": {
+    "page": "copy-url.html",
+    "persistent": false
+  },
+
+  "commands": {
+    "_execute_browser_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+C"
+      }
+    }
+  },
+
+  "permissions": [
+    "activeTab"
+  ]
+}
