@@ -15,7 +15,7 @@ var getIconImage = function(config, alpha) {
   var size = config['size'];
   var context = config['canvas'].getContext('2d');
   context.clearRect(0, 0, size, size);
-  // ...draw to the canvas...
+
   var savedAlpha = context.globalAlpha;
   context.globalAlpha = 1.0;
   context.drawImage(config['icon'], 0, 0);
@@ -123,6 +123,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     } catch (e) {
       console.log("Couldn't copy due to error " + e);
     }
+    // TODO add failure icon or some kind of status reporting
     if (!success) {
       return;
     }
