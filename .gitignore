@@ -1,2 +1,5 @@
 # ignore inherited wildcard
 !*
+
+# Mac lameness
+.DS_Store
