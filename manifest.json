@@ -5,7 +5,7 @@
   "description": "Copies a formatted link to the current tab onto the clipboard.",
   "author": "Tim Dierks <tim@dierks.org>",
   "version": "1.0",
-  
+  "homepage_url": "https://github.com/tdierks/copy-url-ext",
   "icons": {
     "128": "icon128.png"
   },

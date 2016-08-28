@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+zip --quiet copy-url-ext *.json *.html *.js *.png
